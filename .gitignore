@@ -1,0 +1,7 @@
+*.jpg
+*.mat
+*.m
+env
+clothing-co-parsing
+checkpoints
+pymeanshift
