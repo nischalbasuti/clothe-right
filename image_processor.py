@@ -17,14 +17,14 @@ class ImageProcessed(object):
     Uses reference code from https://www.arunponnusamy.com/yolo-object-detection-opencv-python.html for YOLO.
     """
 
-    def __init__(self, image, annotation):
+    def __init__(self, image, annotation=None):
         """
         image: numpy matrix (BGR image)
         annotation: numpy matrix (Grayscale image)
         """
         super(ImageProcessed, self).__init__()
         self.image      =  image
-        self.annotation = annotation
+        self.annotation = annotation if annotation is not None else np.zeros(image.shape)
 
     def display_image(self, prefix="", **kwargs):
         window_name = "%simage" % prefix
@@ -206,7 +206,8 @@ class ImageProcessed(object):
                 scores = detection[5:]
                 class_id = np.argmax(scores)
                 confidence = scores[class_id]
-                if confidence > 0.9:
+                if confidence > 0.99 and class_id == 0:
+                    print(confidence)
                     center_x = int(detection[0] * Width)
                     center_y = int(detection[1] * Height)
                     w = int(detection[2] * Width)
@@ -220,7 +221,7 @@ class ImageProcessed(object):
         # apply non-max suppression
         indices = cv2.dnn.NMSBoxes(boxes, confidences, conf_threshold, nms_threshold)
 
-        self.bound_image = self.image
+        self.bound_image = copy.deepcopy(self.image)
         # go through the detections remaining
         # after nms and draw bounding box
         for i in indices:
@@ -275,6 +276,11 @@ class ImageProcessed(object):
         for b in boxes:
             img = self.image[b['y']:b['y']+b['h'], b['x']:b['x']+b['w']]
             annt = self.annotation[b['y']:b['y']+b['h'], b['x']:b['x']+b['w']]
+
+            # A shitty way to filter out some background detections.
+            if img.shape[0] <= 100 or img.shape[1] <= 100:
+                continue
+
             person_images.append({'image': img, 'annotation': annt})
             if display:
                 cv2.namedWindow("person", 0)
@@ -284,7 +290,9 @@ class ImageProcessed(object):
 
 
 if __name__ == '__main__':
-    ip = ImageProcessed(cv2.imread("./clean_data/image/0002.jpg"),
-            cv2.imread('./clean_data/annotation/0002.jpg'))
-    ip.get_person_images(display = True)
+    for file in os.listdir("./clean_data/image"):
+        print(file)
+        ip = ImageProcessed(cv2.imread("./clean_data/image/%s" % file),
+                cv2.imread("./clean_data/annotation/%s" % file) )
+        imgs = ip.get_person_images(display = True)
 
