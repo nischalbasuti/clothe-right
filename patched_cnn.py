@@ -141,32 +141,38 @@ def open_images(path, max=None, mask=False, size=(32, 32), **kwargs):
 
         if mask:
             images = [
-                        cv.resize(cv.imread(os.path.join(path, fname), cv.IMREAD_UNCHANGED)/255.0, size).flatten()
+                        cv.resize(cv.imread(os.path.join(path, fname), cv.IMREAD_GRAYSCALE)/255.0, size).flatten()
                         for fname in filenames
                     ]
 
         else:
             images = [
-                        cv.resize(
-                            cv.cvtColor(cv.imread(os.path.join(path, fname), cv.IMREAD_UNCHANGED), cv.COLOR_BGR2LAB),
-                            size)
-                        for fname in filenames
+                    cv.resize(cv.cvtColor(cv.imread(os.path.join(path, fname), cv.IMREAD_UNCHANGED), cv.COLOR_BGR2LAB), size) for fname in filenames
                     ]
+            # for fname in filenames:
+            #     img = cv.imread(os.path.join(path, fname), cv.IMREAD_UNCHANGED)
+
+            #     img = cv.resize(cv.cvtColor(img, cv.COLOR_BGR2LAB), size)
+            #     images.append(img)
     # print(filenames)
     print("- Finished loading images from", path)
-    cv.waitKey()
     return images
 
-def _train(size, prefix='patch_cnn' , **kwargs):
+def _train(size, prefix='patch_cnn', images_path= "./clean_data/image",
+        annotations_path="./clean_data/annotation",
+        **kwargs):
     # Learn for image.
-    images = open_images("./clean_data/image", size=(size, size), max=1000)
-    shadow_masks = open_images("./clean_data/annotation", size=(size, size), max=1000, mask=True)
+    images = open_images(images_path, size=(size, size), max=1000)
+    shadow_masks = open_images(annotations_path, size=(size, size), max=1000, mask=True)
 
     x = [] # input features.
     y = [] # labels
 
     x.extend(images)
     y.extend(shadow_masks)
+
+    print(len(x))
+    print(len(y))
 
     prior_cnn = Patched_CNN()
     prior_cnn.build_model(channels=3, size=size)
