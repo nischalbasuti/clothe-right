@@ -77,14 +77,19 @@ def process_clean_files(image_dir_path="./clean_data/image",
         annotation = cv2.imread(annotation_path)
 
         ip = ImageProcessed(image, annotation)
-        # TODO loop through all person images?
-        cropped_image, cropped_annt = ip.get_person_images()[0].values()
+        
+        for person in ip.get_person_images():
+            cropped_image, cropped_annt = person.values()
 
-        # Save image and annotation.
-        image_save_path = os.path.join(image_save_dir, image_file_name)
-        annotation_save_path = os.path.join(annotation_save_dir, image_file_name)
-        cv2.imwrite(image_save_path, cropped_image)
-        cv2.imwrite(annotation_save_path, cropped_annt)
+            # Save image and annotation.
+            image_save_path = os.path.join(image_save_dir, image_file_name)
+            annotation_save_path = os.path.join(annotation_save_dir, image_file_name)
+            cv2.imwrite(image_save_path, cropped_image)
+            cv2.imwrite(annotation_save_path, cropped_annt)
+
+            # TODO remove break? Maybe find the largest person image detected to 
+            # and save that to remove background person detections.
+            break 
 
 if __name__  == '__main__':
     # process the clothing-co-parsing dataset.
