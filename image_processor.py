@@ -57,7 +57,7 @@ class ImageProcessed(object):
         self.display_image(prefix)
         self.display_annotation(prefix)
 
-    def _segment(self, threshold=0):
+    def _segment(self, threshold=0.5):
          ##
          # Segment the image.
         start_time_seconds = time.time()
@@ -79,7 +79,7 @@ class ImageProcessed(object):
         self._set_segment_points(labels_image, number_regions)
 
         # Label each segment if it's annotated or note.
-        self.label_annotation_segments()
+        self.label_annotation_segments(threshold=threshold)
 
         self.segmented_image = segmented_image
 
