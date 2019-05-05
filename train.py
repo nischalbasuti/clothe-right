@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import argparse
-from patched_cnn import _train
   
 parser = argparse.ArgumentParser()
 parser.add_argument("--images", "-i", default="./clean_data/image",
@@ -13,6 +12,8 @@ parser.add_argument("--prefix", "-p", default="patch_cnn", help="model prefix")
 args = parser.parse_args()
 
 shape = int(args.shape)
+
+from patched_cnn import _train
 
 _train(images_path=args.images,
        annotations_path=args.annotations,
