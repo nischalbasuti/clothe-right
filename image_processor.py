@@ -9,6 +9,8 @@ import scipy.io as sio
 import time
 import copy
 
+import pickle
+
 import pymeanshift as pms
 
 class ImageProcessed(object):
@@ -288,11 +290,103 @@ class ImageProcessed(object):
                 cv2.waitKey()
         return person_images
 
+    def get_person_pose(self, threshold=0.0, show = False, **kwargs):
+        """
+        reference code from:
+        https://www.learnopencv.com/deep-learning-based-human-pose-estimation-using-opencv-cpp-python/
+        """
+        # Specify the paths for the 2 files
+        protoFile = "./pose_deploy_linevec_faster_4_stages.prototxt.txt"
+        weightsFile = "./pose_iter_160000.caffemodel"
+         
+        # Read the network into Memory
+        net = cv2.dnn.readNetFromCaffe(protoFile, weightsFile)
+
+        # Specify the input image dimensions
+        inWidth = 368
+        inHeight = 368
+        inWidth = self.image.shape[1]
+        inHeight = self.image.shape[0]
+         
+        frame = copy.deepcopy(self.image)
+        # Prepare the frame to be fed to the network
+        inpBlob = cv2.dnn.blobFromImage(frame, 1.0 / 255, (inWidth, inHeight), (0, 0, 0), swapRB=False, crop=False)
+         
+        # Set the prepared object as the input blob of the network
+        net.setInput(inpBlob)
+
+        output = net.forward()
+
+        H = output.shape[2]
+        W = output.shape[3]
+
+        frameWidth = inWidth
+        frameHeight = inHeight
+        # Empty list to store the detected keypoints
+        points = []
+        # pose_mask = np.zeros(self.image.shape)
+        pose_mask = np.zeros((self.image.shape[0], self.image.shape[1], 15))
+        # for i in range(len(output[0])):
+        for i in range(15):
+            # confidence map of corresponding body's part.
+            probMap = output[0, i, :, :]
+         
+            # Find global maxima of the probMap.
+            minVal, prob, minLoc, point = cv2.minMaxLoc(probMap)
+             
+            # Scale the point to fit on the original image
+            x = (frameWidth * point[0]) / W
+            y = (frameHeight * point[1]) / H
+         
+            if prob > threshold : 
+                cv2.circle(frame, (int(x), int(y)), 5, (0, 255, 255), thickness=-1, lineType=cv2.FILLED)
+                cv2.putText(frame, "{}".format(i), (int(x), int(y)), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2, lineType=cv2.LINE_AA)
+         
+                # Add the point to the list if the probability is greater than the threshold
+                points.append((int(x), int(y)))
+
+                for _y in range(int(y)-5, int(y)+5):
+                    for _x in range(int(x)-5, int(x)+5):
+                        pose_mask[_y, _x, i] = 255
+            else :
+                points.append(None)
+
+        POSE_PAIRS = [
+                (0,1), (1, 2), (1, 5), (2,3), (3, 4), (5,6), (6, 7), 
+                (1,14), (14, 8), (14, 11), (8, 9), (9, 10), (11, 12),
+                (12, 13)
+                ]
+
+        for pair in POSE_PAIRS:
+            partA = pair[0]
+            partB = pair[1]
+         
+            if points[partA] and points[partB]:
+                cv2.line(frame, points[partA], points[partB], (0, 255, 0), 3)
+         
+        if show == True:
+            cv2.namedWindow("Output-Keypoints", 0)
+            cv2.imshow("Output-Keypoints",frame)
+            # cv2.namedWindow("pose mask", 0)
+            # cv2.imshow("pose mask", pose_mask)
+            cv2.waitKey(0)
+            cv2.destroyAllWindows()
+
+        
+        ip = np.dstack((self.image, pose_mask))
+        with open("arr_dump.pickle", "wb") as f_out:
+            pickle.dump(ip, f_out)
+
+        self.pose_mask = pose_mask
+        return pose_mask
 
 if __name__ == '__main__':
     for file in os.listdir("./clean_data/image"):
         print(file)
         ip = ImageProcessed(cv2.imread("./clean_data/image/%s" % file),
                 cv2.imread("./clean_data/annotation/%s" % file) )
-        imgs = ip.get_person_images(display = True)
+        # imgs = ip.get_person_images(display = True)
+        ip.get_person_pose()
+    # ip = ImageProcessed(cv2.imread("./jimih1.jpg"))
+    # ip.get_person_pose(show = True)
 
