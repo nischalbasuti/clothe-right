@@ -22,13 +22,13 @@ tops_dict = {
  'bra': 8,
  'cardigan': 11,
  'coat': 13, ##################
- # 'dress': 14, #################
+ 'dress': 14, #################
  'hoodie': 22,
  # 'intimate': 23,
  'jacket': 24,
- # 'jumper': 26,
- # 'romper': 35,
- # 'scarf': 37,
+ 'jumper': 26,
+ 'romper': 35,
+ 'scarf': 37,
  'shirt': 38,
  # 'skin': 41,
  'suit': 46,
@@ -36,7 +36,7 @@ tops_dict = {
  'sweatshirt': 49,
  # 'swimwear': 50,
  't-shirt': 51,
- # 'tie': 52,
+ 'tie': 52,
  'top': 54,
  'vest': 55,
 }
