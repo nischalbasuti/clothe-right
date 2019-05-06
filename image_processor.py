@@ -39,6 +39,8 @@ class ImageProcessed(object):
             cv2.namedWindow(window_name, 0)
             cv2.imshow(window_name, self.image)
 
+        cv2.imwrite(window_name+".jpg", self.image)
+
     def display_annotation(self, prefix="", matplot=False, **kwargs):
         window_name = "%annotation" % prefix
         if matplot:
@@ -47,6 +49,7 @@ class ImageProcessed(object):
         else:
             cv2.namedWindow(window_name, 0)
             cv2.imshow(window_name, self.annotation)
+        cv2.imwrite(window_name+".jpg", self.annotation)
 
     def display_segmented_image(self, prefix="", matplot=False, **kwargs):
         window_name = "%ssegmented image" % prefix
@@ -56,6 +59,7 @@ class ImageProcessed(object):
         else:
             cv2.namedWindow(window_name, 0)
             cv2.imshow(window_name, self.segmented_image)
+        cv2.imwrite(window_name+".jpg", self.segmented_image)
 
     def display_segmented_annotation(self, prefix="", matplot=False, **kwargs):
 
@@ -72,6 +76,7 @@ class ImageProcessed(object):
         else:
             cv2.namedWindow("%ssegmented annotation image" % prefix, 0)
             cv2.imshow("%ssegmented annotation image" % prefix, annotation_image)
+        cv2.imwrite(window_name+".jpg", annotation_image)
 
     def display(self, prefix="", **kwargs):
         self.display_image(prefix)
