@@ -76,7 +76,7 @@ class ImageProcessed(object):
         else:
             cv2.namedWindow("%ssegmented annotation image" % prefix, 0)
             cv2.imshow("%ssegmented annotation image" % prefix, annotation_image)
-        cv2.imwrite(window_name+".jpg", annotation_image)
+        cv2.imwrite("annotation.jpg", annotation_image)
 
     def display(self, prefix="", **kwargs):
         self.display_image(prefix)
