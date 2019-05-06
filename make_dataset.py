@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 import os
 import glob
+import pickle
+import json
 
 import numpy as np
 import cv2
@@ -62,11 +64,18 @@ def process_clean_files(image_dir_path="./clean_data/image",
 
     # Create directories to save the processed files.
     image_save_dir = os.path.join(save_dir, "image")
-    annotation_save_dir = os.path.join(save_dir, "annotation")
     os.makedirs(image_save_dir, exist_ok=True)
+
+    annotation_save_dir = os.path.join(save_dir, "annotation")
     os.makedirs(annotation_save_dir, exist_ok=True)
 
+    pose_save_dir = os.path.join(save_dir, "pose")
+    os.makedirs(pose_save_dir, exist_ok=True)
+
+    dataset = { 'image': [], 'annotation': [], 'pose_heatmap': [] }
+
     # Process images.
+    count = 0
     image_paths = glob.glob(os.path.join(image_dir_path, "*.jpg"))
     for image_path in image_paths:
         # open image
@@ -80,20 +89,76 @@ def process_clean_files(image_dir_path="./clean_data/image",
 
         annotation = cv2.imread(annotation_path)
 
+        # if count < 852:
+        #     continue
+
         ip = ImageProcessed(image, annotation)
         
+        prev_area = 0
         for person in ip.get_person_images():
-            cropped_image, cropped_annt = person.values()
+            cropped_image, cropped_annt, cropped_pose = person.values()
+            
+            # Only save the largest person detected in image.
+            area = cropped_image.shape[0] * cropped_image.shape[1]
+            if area < prev_area:
+                continue
+
+            # if prev_area == 0:
+            #     dataset['image'].append(cropped_image)
+            #     dataset['annotation'].append(cropped_annt)
+            #     dataset['pose_heatmap'].append(cropped_pose)
+            # elif area > prev_area:
+            #     dataset['image'][-1]        = cropped_image
+            #     dataset['annotation'][-1]   = cropped_annt
+            #     dataset['pose_heatmap'][-1] = cropped_pose
+
+            prev_area = area
 
             # Save image and annotation.
             image_save_path = os.path.join(image_save_dir, image_file_name)
             annotation_save_path = os.path.join(annotation_save_dir, image_file_name)
+            pose_save_path = os.path.join(pose_save_dir, image_file_name)
+
             cv2.imwrite(image_save_path, cropped_image)
             cv2.imwrite(annotation_save_path, cropped_annt)
 
-            # TODO remove break? Maybe find the largest person image detected to 
-            # and save that to remove background person detections.
-            break 
+            # Save pose heatmap.
+            cv2.imwrite(pose_save_path+".0.jpg", cropped_pose[:,:, 0:3])
+            cv2.imwrite(pose_save_path+".1.jpg", cropped_pose[:,:, 3:6])
+            cv2.imwrite(pose_save_path+".2.jpg", cropped_pose[:,:, 6:9])
+            cv2.imwrite(pose_save_path+".3.jpg", cropped_pose[:,:, 9:12])
+            cv2.imwrite(pose_save_path+".4.jpg", cropped_pose[:,:, 12:15])
+            cv2.imwrite(pose_save_path+".5.jpg", cropped_pose[:,:, 15:18])
+
+            print(pose_save_path+".0.jpg", cropped_pose[:,:, 0:3].shape)
+            print(pose_save_path+".1.jpg", cropped_pose[:,:, 3:6].shape)
+            print(pose_save_path+".2.jpg", cropped_pose[:,:, 6:9].shape)
+            print(pose_save_path+".3.jpg", cropped_pose[:,:, 9:12].shape)
+            print(pose_save_path+".4.jpg", cropped_pose[:,:, 12:15].shape)
+            print(pose_save_path+".5.jpg", cropped_pose[:,:, 15:18].shape)
+            
+            # with open(pose_save_path, 'wb') as f:
+                # print(cropped_pose.shape)
+                # pickle.dump(cropped_pose, f)
+        # if count % 10 == 0:
+        #     with open("./dataset.pickle", "wb") as f:
+        #         print("Writing dataset.pickle")
+        #         print("Size:", len(dataset['image']))
+        #         pickle.dump(dataset, f)
+            # with open("./dataset.json", "w") as f:
+            #     print("Writing dataset.json")
+            #     print("Size:", len(dataset['image']))
+            #     json.dump(dataset, f)
+        count += 1
+
+    # with open("./dataset.pickle", "wb") as f:
+    #     print("Writing dataset.pickle")
+    #     print("Size:", len(dataset))
+    #     pickle.dump(dataset, f)
+    # with open("./dataset.json", "w") as f:
+    #     print("Writing dataset.json")
+    #     print("Size:", len(dataset['image']))
+    #     json.dump(dataset, f)
 
 if __name__  == '__main__':
     # # process the clothing-co-parsing dataset.

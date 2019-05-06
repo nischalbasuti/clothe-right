@@ -283,14 +283,15 @@ class ImageProcessed(object):
             if img.shape[0] <= 100 or img.shape[1] <= 100:
                 continue
 
-            person_images.append({'image': img, 'annotation': annt})
+            pose = self._get_person_pose(img)
+            person_images.append({'image': img, 'annotation': annt, 'pose': pose})
             if display:
                 cv2.namedWindow("person", 0)
                 cv2.imshow("person", img)
                 cv2.waitKey()
         return person_images
 
-    def get_person_pose(self, threshold=0.0, show = False, **kwargs):
+    def _get_person_pose(self, image, threshold=0.0, show = False, **kwargs):
         """
         reference code from:
         https://www.learnopencv.com/deep-learning-based-human-pose-estimation-using-opencv-cpp-python/
@@ -305,8 +306,8 @@ class ImageProcessed(object):
         # Specify the input image dimensions
         inWidth = 368
         inHeight = 368
-        inWidth = self.image.shape[1]
-        inHeight = self.image.shape[0]
+        inWidth = image.shape[1]
+        inHeight = image.shape[0]
          
         frame = copy.deepcopy(self.image)
         # Prepare the frame to be fed to the network
@@ -325,7 +326,7 @@ class ImageProcessed(object):
         # Empty list to store the detected keypoints
         points = []
         # pose_mask = np.zeros(self.image.shape)
-        pose_mask = np.zeros((self.image.shape[0], self.image.shape[1], 15))
+        pose_mask = np.zeros((image.shape[0], image.shape[1], 15))
         # for i in range(len(output[0])):
         for i in range(15):
             # confidence map of corresponding body's part.
@@ -373,12 +374,12 @@ class ImageProcessed(object):
             cv2.destroyAllWindows()
 
         
-        ip = np.dstack((self.image, pose_mask))
-        with open("arr_dump.pickle", "wb") as f_out:
-            pickle.dump(ip, f_out)
+        ip = np.dstack((image, pose_mask))
+        # with open("arr_dump.pickle", "wb") as f_out:
+        #     pickle.dump(ip, f_out)
 
-        self.pose_mask = pose_mask
-        return pose_mask
+        # self.pose_mask = pose_mask
+        return ip
 
 if __name__ == '__main__':
     for file in os.listdir("./clean_data/image"):
@@ -386,7 +387,7 @@ if __name__ == '__main__':
         ip = ImageProcessed(cv2.imread("./clean_data/image/%s" % file),
                 cv2.imread("./clean_data/annotation/%s" % file) )
         # imgs = ip.get_person_images(display = True)
-        ip.get_person_pose()
+        ip.get_person_pose(image=ip.image)
     # ip = ImageProcessed(cv2.imread("./jimih1.jpg"))
     # ip.get_person_pose(show = True)
 

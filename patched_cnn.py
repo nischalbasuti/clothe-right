@@ -4,6 +4,8 @@ import os
 import numpy as np
 import cv2 as cv
 
+import pickle
+
 # Disable annoying messages.
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
@@ -149,12 +151,6 @@ def open_images(path, max=None, mask=False, size=(32, 32), **kwargs):
             images = [
                     cv.resize(cv.cvtColor(cv.imread(os.path.join(path, fname), cv.IMREAD_UNCHANGED), cv.COLOR_BGR2LAB), size) for fname in filenames
                     ]
-            # for fname in filenames:
-            #     img = cv.imread(os.path.join(path, fname), cv.IMREAD_UNCHANGED)
-
-            #     img = cv.resize(cv.cvtColor(img, cv.COLOR_BGR2LAB), size)
-            #     images.append(img)
-    # print(filenames)
     print("- Finished loading images from", path)
     return images
 
@@ -162,20 +158,53 @@ def _train(size, prefix='patch_cnn', images_path= "./clean_data/image",
         annotations_path="./clean_data/annotation",
         **kwargs):
     # Learn for image.
-    images = open_images(images_path, size=(size, size), max=1000)
-    shadow_masks = open_images(annotations_path, size=(size, size), max=1000, mask=True)
+    images = []
+    masks = []
+    shape = (size, size)
+    print('loading images')
+    for (dirpath, dirnames, filenames) in os.walk("./cropped_data/annotation"):
+        for fname in filenames:
+            i0 = cv.resize(cv.imread(os.path.join("./cropped_data/pose", fname+".0.jpg"), cv.IMREAD_UNCHANGED), shape)
+            i1 = cv.resize(cv.imread(os.path.join("./cropped_data/pose", fname+".1.jpg"), cv.IMREAD_UNCHANGED), shape)
+            i2 = cv.resize(cv.imread(os.path.join("./cropped_data/pose", fname+".2.jpg"), cv.IMREAD_UNCHANGED), shape)
+            i3 = cv.resize(cv.imread(os.path.join("./cropped_data/pose", fname+".3.jpg"), cv.IMREAD_UNCHANGED), shape)
+            i4 = cv.resize(cv.imread(os.path.join("./cropped_data/pose", fname+".4.jpg"), cv.IMREAD_UNCHANGED), shape)
+            i5 = cv.resize(cv.imread(os.path.join("./cropped_data/pose", fname+".5.jpg"), cv.IMREAD_UNCHANGED), shape)
+            
+            i = np.dstack((i0, i1, i2, i3, i4, i5))
+            m = cv.imread(os.path.join("./cropped_data/annotation", fname), cv.IMREAD_GRAYSCALE)/255.0
+            m = cv.resize(m, shape).flatten()
+            # print(i.shape)
+            # print(m.shape)
+
+            images.append(i)
+            masks.append(m)
+    print('finished loading images')
+    print(i[0].shape)
+    
+    # for (dirpath, dirnames, filenames) in os.walk("./cropped_data/pose"):
+    #     for fname in filenames:
+    #         with open(os.path.join("./cropped_data/pose", fname), 'rb') as f:
+    #             images.append(pickle.load(f))
+
+    # images = open_images(images_path, size=(size, size), max=None)
+    # shadow_masks = open_images(annotations_path, size=(size, size), max=None, mask=True)
 
     x = [] # input features.
     y = [] # labels
 
     x.extend(images)
-    y.extend(shadow_masks)
+    y.extend(masks)
 
-    print(len(x))
-    print(len(y))
+    print("Input size:", len(x))
+    print("Target size:", len(y))
+
+    if len(x) != len(y):
+        print("len(x) != len(y)")
+        os.abort()
 
     prior_cnn = Patched_CNN()
-    prior_cnn.build_model(channels=3, size=size)
+    prior_cnn.build_model(channels=18, size=size)
     prior_cnn.train(
             x, y,
             batch_size=20,
@@ -183,3 +212,9 @@ def _train(size, prefix='patch_cnn', images_path= "./clean_data/image",
             patience=5,
             prefix="%s_size%dx%d.h5_" % (prefix, size, size))
 
+if __name__ == '__main__': 
+    _train(images_path="./cropped_data/image",
+           annotations_path="./cropped_data/annotation",
+           prefix="pose",
+           # size=128)
+           size=128)

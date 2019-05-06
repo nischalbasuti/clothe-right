@@ -24,10 +24,11 @@ def detect(image_path, model_path):
 
     imgp = ip.ImageProcessed(cv2.imread(image_path))
     img = imgp.get_person_images()[0]["image"]
+    img1 = imgp._get_person_pose(img)
 
-    imgLab = cv2.cvtColor(img, cv2.COLOR_BGR2LAB)
+    # imgLab = cv2.cvtColor(img, cv2.COLOR_BGR2LAB)
 
-    input_img = np.array([ cv2.resize( imgLab, (shape, shape) ) ]) # input to nn should be (1, 32, 32, 3)
+    input_img = np.array([ cv2.resize( img1, (shape, shape) ) ]) # input to nn should be (1, 32, 32, 3)
 
     cnn = pcnn.Patched_CNN()
     cnn.load_model(model_path)
