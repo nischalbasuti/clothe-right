@@ -57,10 +57,11 @@ if __name__ == '__main__':
 
     imgp_detected = detect(args.image, args.model)
 
-    imgp_detected.display_image()
-    imgp_detected.display_annotation()
-    imgp_detected.display_segmented_annotation()
-    imgp_detected.display_segmented_image()
+    
+    imgp_detected.display_image(matplot=True)
+    imgp_detected.display_annotation(matplot=True)
+    imgp_detected.display_segmented_annotation(matplot=True)
+    imgp_detected.display_segmented_image(matplot=True)
 
     heat_map = generate_heatmap_image(imgp_detected.image, imgp_detected.annotation)
     cv2.namedWindow("heat map", 0)

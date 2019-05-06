@@ -11,6 +11,8 @@ import copy
 
 import pickle
 
+from matplotlib import pyplot as plt
+
 import pymeanshift as pms
 
 class ImageProcessed(object):
@@ -28,22 +30,34 @@ class ImageProcessed(object):
         self.image      =  image
         self.annotation = annotation if annotation is not None else np.zeros(image.shape)
 
-    def display_image(self, prefix="", **kwargs):
+    def display_image(self, prefix="", matplot=False, **kwargs):
         window_name = "%simage" % prefix
-        cv2.namedWindow(window_name, 0)
-        cv2.imshow(window_name, self.image)
+        if matplot:
+            plt.imshow(self.image)
+            plt.show()
+        else:
+            cv2.namedWindow(window_name, 0)
+            cv2.imshow(window_name, self.image)
 
-    def display_annotation(self, prefix="", **kwargs):
+    def display_annotation(self, prefix="", matplot=False, **kwargs):
         window_name = "%annotation" % prefix
-        cv2.namedWindow(window_name, 0)
-        cv2.imshow(window_name, self.annotation)
+        if matplot:
+            plt.imshow(self.annotation)
+            plt.show()
+        else:
+            cv2.namedWindow(window_name, 0)
+            cv2.imshow(window_name, self.annotation)
 
-    def display_segmented_image(self, prefix="", **kwargs):
+    def display_segmented_image(self, prefix="", matplot=False, **kwargs):
         window_name = "%ssegmented image" % prefix
-        cv2.namedWindow(window_name, 0)
-        cv2.imshow(window_name, self.segmented_image)
+        if matplot:
+            plt.imshow(self.segmented_image)
+            plt.show()
+        else:
+            cv2.namedWindow(window_name, 0)
+            cv2.imshow(window_name, self.segmented_image)
 
-    def display_segmented_annotation(self, prefix="", **kwargs):
+    def display_segmented_annotation(self, prefix="", matplot=False, **kwargs):
 
         annotation_image = copy.deepcopy(self.image)
         for i in range(len(self.segments)):
@@ -52,8 +66,12 @@ class ImageProcessed(object):
                     rows = self.segments[i]["points"][col]
                     for row in rows:
                         annotation_image[col, row] = (0, 255, 0)
-        cv2.namedWindow("%ssegmented annotation image" % prefix, 0)
-        cv2.imshow("%ssegmented annotation image" % prefix, annotation_image)
+        if matplot:
+            plt.imshow(annotation_image)
+            plt.show()
+        else:
+            cv2.namedWindow("%ssegmented annotation image" % prefix, 0)
+            cv2.imshow("%ssegmented annotation image" % prefix, annotation_image)
 
     def display(self, prefix="", **kwargs):
         self.display_image(prefix)
